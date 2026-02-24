@@ -711,3 +711,20 @@ button:disabled {
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
+
+.help-note {
+  margin-top: 20px;
+  font-size: 14px;
+  text-align: center;
+  color: #666;
+}
+
+.help-note a {
+  color: #2b6cb0;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.help-note a:hover {
+  text-decoration: underline;
+}
