@@ -17,13 +17,11 @@ const formError = document.getElementById("form-error");
 let timeLeft = 2700;
 let timerInterval;
 
-
 /* ===== CHEAT SYSTEM ===== */
 
 let cheatCount = 0;
 let cheatLog = [];
 let maxCheatLimit = 3;
-
 
 /* ========================== */
 /* ===== BUTTON LOADING ===== */
@@ -31,7 +29,6 @@ let maxCheatLimit = 3;
 
 function setButtonLoading(button, text = "Processing...") {
   if (!button) return;
-
   button.dataset.originalText = button.innerHTML;
   button.innerHTML = text;
   button.disabled = true;
@@ -41,7 +38,6 @@ function setButtonLoading(button, text = "Processing...") {
 
 function resetButton(button) {
   if (!button) return;
-
   button.innerHTML = button.dataset.originalText;
   button.disabled = false;
   button.style.opacity = "1";
@@ -51,7 +47,6 @@ function resetButton(button) {
 /* ========================== */
 /* ===== TAB SWITCH ===== */
 /* ========================== */
-
 
 function switchTab(type) {
   clearFormError();
@@ -69,13 +64,12 @@ function switchTab(type) {
   }
 }
 
-
 /* ========================== */
 /* ===== REGISTER ===== */
 /* ========================== */
 
-function registerUser() {
-
+function registerUser(event) {
+  event.preventDefault();
   const btn = event.target;
   setButtonLoading(btn, "Creating Account...");
 
@@ -91,9 +85,7 @@ function registerUser() {
 
   firebase.auth().createUserWithEmailAndPassword(emailVal, passwordVal)
     .then(userCredential => {
-
       const uid = userCredential.user.uid;
-
       return db.collection("users").doc(uid).set({
         name: nameVal,
         email: emailVal,
@@ -103,7 +95,6 @@ function registerUser() {
         cheatStatus: "Clean",
         createdAt: new Date()
       });
-
     })
     .then(() => {
       resetButton(btn);
@@ -115,13 +106,12 @@ function registerUser() {
     });
 }
 
-
 /* ========================== */
 /* ===== LOGIN ===== */
 /* ========================== */
 
-function loginUser() {
-
+function loginUser(event) {
+  event.preventDefault();
   const btn = event.target;
   setButtonLoading(btn, "Logging in...");
 
@@ -139,7 +129,6 @@ function loginUser() {
   });
 }
 
-
 /* ========================== */
 /* ===== DASHBOARD FLOW ===== */
 /* ========================== */
@@ -149,21 +138,17 @@ function startUserFlow() {
   const user = firebase.auth().currentUser;
   if (!user) return;
 
-  const uid = user.uid;
+  db.collection("users").doc(user.uid).get().then(doc => {
 
-  db.collection("users").doc(uid).get().then(doc => {
-
-    if (!doc.exists) {
-      showFormError("User record not found.");
-      return;
-    }
+    if (!doc.exists) return;
 
     const data = doc.data();
 
     detailsPage.style.display = "none";
     examPage.style.display = "none";
-    document.body.classList.remove("exam-active"); // ensure reset
     dashboardPage.style.display = "block";
+    document.body.classList.remove("exam-active");
+    document.body.style.overflow = "auto";
 
     welcomeText.innerText = "Welcome, " + data.name;
 
@@ -187,18 +172,26 @@ function startUserFlow() {
   });
 }
 
-
 /* ========================== */
 /* ===== START EXAM ===== */
 /* ========================== */
 
-function startExam() {
+function startExam(event) {
+  event.preventDefault();
 
   const btn = event.target;
   setButtonLoading(btn, "Starting...");
 
-  setTimeout(() => {
-    resetButton(btn);
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  db.collection("users").doc(user.uid).get().then(doc => {
+
+    if (doc.exists && doc.data().hasAttempted) {
+      resetButton(btn);
+      alert("You have already attempted the exam.");
+      return;
+    }
 
     cheatCount = 0;
     cheatLog = [];
@@ -207,12 +200,15 @@ function startExam() {
     dashboardPage.style.display = "none";
     examPage.style.display = "block";
     document.body.classList.add("exam-active");
+    document.body.style.overflow = "hidden";
+    window.scrollTo(0, 0);
 
     loadQuestions();
     startTimer();
-  }, 800);
-}
 
+    resetButton(btn);
+  });
+}
 
 /* ========================== */
 /* ===== LOAD QUESTIONS ===== */
@@ -228,36 +224,30 @@ function loadQuestions() {
     const div = document.createElement("div");
     div.innerHTML = `<p>${index + 1}. ${q.question}</p>`;
 
-    // ✅ MCQ TYPE
     if (q.type === "mcq") {
-
       q.options.forEach((opt, i) => {
         div.innerHTML += `
-          <label class="option-item">
+          <label>
             <input type="radio" name="q${index}" value="${i}">
             ${opt}
-          </label>`;
+          </label><br>
+        `;
       });
-
     }
 
-    // ✅ TEXT TYPE
     if (q.type === "text") {
-
       div.innerHTML += `
         <input type="text"
-               name="q${index}"
-               placeholder="Enter your answer"
-               class="text-answer"
-               autocomplete="off"
-        >`;
+          name="q${index}"
+          placeholder="Enter your answer"
+          autocomplete="off"
+        ><br><br>
+      `;
     }
 
     container.appendChild(div);
-
   });
 }
-
 
 /* ========================== */
 /* ===== TIMER ===== */
@@ -275,20 +265,18 @@ function startTimer() {
     let s = timeLeft % 60;
 
     timerElement.innerText =
-      `Time Left: ${m}:${s < 10 ? "0" : ""}${s}`;
+      `Time Left: ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 
     if (timeLeft <= 0) submitExam();
 
   }, 1000);
 }
 
-
 /* ========================== */
 /* ===== CHEAT DETECTION ===== */
 /* ========================== */
 
 function handleCheat(reason) {
-
   if (examPage.style.display !== "block") return;
 
   cheatCount++;
@@ -304,10 +292,18 @@ document.addEventListener("visibilitychange", function () {
 });
 
 document.addEventListener("copy", function (e) {
-  e.preventDefault();
-  handleCheat("Copy Attempted");
+  if (examPage.style.display === "block") {
+    e.preventDefault();
+    handleCheat("Copy Attempted");
+  }
 });
 
+document.addEventListener("contextmenu", function (e) {
+  if (examPage.style.display === "block") {
+    e.preventDefault();
+    handleCheat("Right Click Attempted");
+  }
+});
 
 document.addEventListener("keydown", function (e) {
   if (
@@ -320,6 +316,11 @@ document.addEventListener("keydown", function (e) {
   }
 });
 
+window.addEventListener("beforeunload", function () {
+  if (examPage.style.display === "block") {
+    handleCheat("Page Refresh Attempted");
+  }
+});
 
 /* ========================== */
 /* ===== SUBMIT EXAM ===== */
@@ -327,10 +328,8 @@ document.addEventListener("keydown", function (e) {
 
 document.getElementById("exam-form").addEventListener("submit", function(e){
   e.preventDefault();
-
   const btn = this.querySelector("button[type='submit']");
   setButtonLoading(btn, "Submitting...");
-
   submitExam(btn);
 });
 
@@ -341,20 +340,60 @@ function submitExam(btn) {
 
   clearInterval(timerInterval);
 
-  let score = 0;
+  let totalScore = 0;
 
   questions.forEach((q, i) => {
-    const selected = document.querySelector(`input[name="q${i}"]:checked`);
-    if (selected && parseInt(selected.value) === q.answer) {
-      score++;
+
+    if (q.type === "mcq") {
+      const selected = document.querySelector(`input[name="q${i}"]:checked`);
+      if (selected && parseInt(selected.value) === q.answer) {
+        totalScore += q.marks || 1;
+      }
     }
+
+    if (q.type === "text") {
+      const input = document.querySelector(`input[name="q${i}"]`);
+      if (input && input.value.trim() !== "") {
+
+        const cleanAnswer = input.value.toLowerCase().replace(/[^\w\s]/gi, '');
+        const wordCount = cleanAnswer.split(/\s+/).length;
+
+        if (wordCount >= q.minWords) {
+
+          let matchCount = 0;
+
+          q.keywords.forEach(keyword => {
+            if (cleanAnswer.includes(keyword.toLowerCase())) {
+              matchCount++;
+            }
+          });
+
+          if (matchCount >= 2) {
+            totalScore += q.marks || 4;
+          } else if (matchCount === 1) {
+            totalScore += Math.floor((q.marks || 4) / 2);
+          }
+        }
+      }
+    }
+
   });
 
+  let finalStatus;
+
+  if (cheatCount >= maxCheatLimit) {
+    finalStatus = "Disqualified";
+    totalScore = 0;
+  } else if (totalScore >= 35) {
+    finalStatus = "Qualified";
+  } else {
+    finalStatus = "Not Qualified";
+  }
+
   db.collection("users").doc(user.uid).update({
-    score: score,
-    status: cheatCount >= maxCheatLimit
-      ? "Disqualified"
-      : (score >= 35 ? "Qualified" : "Not Qualified"),
+    score: totalScore,
+    percentage: ((totalScore / 50) * 100).toFixed(2),
+    status: finalStatus,
     cheatCount: cheatCount,
     cheatStatus:
       cheatCount === 0 ? "Clean"
@@ -365,15 +404,15 @@ function submitExam(btn) {
     timestamp: new Date()
   }).then(() => {
 
-    resetButton(btn);
+    if (btn) resetButton(btn);
 
     examPage.style.display = "none";
     document.body.classList.remove("exam-active");
+    document.body.style.overflow = "auto";
     startUserFlow();
 
   });
 }
-
 
 /* ========================== */
 /* ===== DISQUALIFY ===== */
@@ -388,6 +427,7 @@ function disqualifyUser() {
 
   db.collection("users").doc(user.uid).update({
     score: 0,
+    percentage: 0,
     status: "Disqualified",
     cheatCount: cheatCount,
     cheatStatus: "Disqualified",
@@ -399,11 +439,11 @@ function disqualifyUser() {
     alert("You are Disqualified due to policy violation.");
     examPage.style.display = "none";
     document.body.classList.remove("exam-active");
+    document.body.style.overflow = "auto";
     startUserFlow();
 
   });
 }
-
 
 /* ========================== */
 /* ===== LOGOUT ===== */
@@ -412,7 +452,6 @@ function disqualifyUser() {
 function logoutUser() {
   firebase.auth().signOut().then(() => location.reload());
 }
-
 
 /* ========================== */
 /* ===== AUTO LOGIN ===== */
@@ -424,10 +463,8 @@ firebase.auth().onAuthStateChanged(user => {
     detailsPage.style.display = "block";
     dashboardPage.style.display = "none";
     examPage.style.display = "none";
-    document.body.classList.remove("exam-active");
   }
 });
-
 
 /* ========================== */
 /* ===== ERROR HANDLING ===== */
