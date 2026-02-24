@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>RL Admin Panel</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<div class="main-wrapper">
+
+  <div class="card admin-card">
+
+    <h1>RL Intelligence Results</h1>
+
+    <!-- 🔐 Admin Login -->
+    <div class="admin-login">
+      <input type="password" id="adminPass" placeholder="Enter Admin Password">
+      <button onclick="authenticateAdmin()">Access Results</button>
+    </div>
+
+<div class="admin-summary" style="display:none;">
+
+  <div class="summary-card">
+    <h4>Total Users</h4>
+    <p id="totalUsers">0</p>
+  </div>
+
+  <div class="summary-card qualified">
+    <h4>Qualified</h4>
+    <p id="qualifiedUsers">0</p>
+  </div>
+
+  <div class="summary-card not-qualified">
+    <h4>Not Qualified</h4>
+    <p id="notQualifiedUsers">0</p>
+  </div>
+
+  <div class="summary-card disqualified">
+    <h4>Disqualified</h4>
+    <p id="disqualifiedUsers">0</p>
+  </div>
+
+  <div class="summary-card clean">
+    <h4>Clean Users</h4>
+    <p id="cleanUsers">0</p>
+  </div>
+
+  <div class="summary-card cheated">
+    <h4>Cheated Users</h4>
+    <p id="cheatedUsers">0</p>
+  </div>
+
+  <div class="summary-card cheat-total">
+    <h4>Total Cheat Attempts</h4>
+    <p id="totalCheatCount">0</p>
+  </div>
+
+</div>
+
+    <!-- 🔍 Filters -->
+    <div class="filter-section" style="display:none;">
+      <input type="text" id="searchInput" placeholder="Search name/email">
+
+      <select id="statusFilter">
+        <option value="">All Status</option>
+        <option value="Qualified">Qualified</option>
+        <option value="Not Qualified">Not Qualified</option>
+        <option value="Disqualified">Disqualified</option>
+      </select>
+
+      <select id="cheatFilter">
+        <option value="">All Cheat</option>
+        <option value="cheated">Cheated</option>
+        <option value="clean">Clean</option>
+      </select>
+
+      <button onclick="applyFilters()">Apply</button>
+    </div>
+
+    <!-- 🏆 Leaderboard -->
+    <div class="leaderboard" style="display:none;">
+      <h3>🏆 Top 5 Leaderboard</h3>
+      <ul id="leaderboardList"></ul>
+    </div>
+
+    <!-- 📋 Table -->
+    <div class="table-wrapper" style="display:none;">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+                        <th>Mobile</th>
+
+            <th>Email</th>
+            <th>Score</th>
+            <th>Status</th>
+            <th>Cheat Count</th>
+            <th>Cheat Status</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+    </div>
+
+    <!-- 📄 Pagination -->
+    <div class="pagination" style="display:none;">
+      <button id="prevBtn" onclick="previousPage()">⬅ Prev</button>
+      <span id="pageInfo">Page 1</span>
+      <button id="nextBtn" onclick="nextPage()">Next ➡</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="firebase-config.js"></script>
+<script src="admin.js"></script>
+
+</body>
+</html>
