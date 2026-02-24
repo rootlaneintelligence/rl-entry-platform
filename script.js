@@ -13,7 +13,7 @@ const examPage = document.getElementById("exam-page");
 
 const welcomeText = document.getElementById("welcome-text");
 const formError = document.getElementById("form-error");
-
+const EXAM_SESSION_KEY = "rl_exam_active";
 let timeLeft = 2700;
 let timerInterval;
 
@@ -178,6 +178,12 @@ function startUserFlow() {
 
 function startExam(event) {
   event.preventDefault();
+  cheatCount = 0;
+cheatLog = [];
+timeLeft = 2700;
+
+localStorage.setItem(EXAM_SESSION_KEY, "true");
+localStorage.setItem("rl_exam_timeLeft", timeLeft);
 
   const btn = event.target;
   setButtonLoading(btn, "Starting...");
@@ -217,36 +223,52 @@ function startExam(event) {
 function loadQuestions() {
 
   const container = document.getElementById("questions-container");
+
+  if (!container) {
+    console.error("Questions container not found.");
+    return;
+  }
+
+  if (typeof questions === "undefined" || !Array.isArray(questions)) {
+    console.error("Questions array not loaded properly.");
+    container.innerHTML = "<p style='color:red;'>Error loading questions.</p>";
+    return;
+  }
+
   container.innerHTML = "";
 
   questions.forEach((q, index) => {
 
     const div = document.createElement("div");
-    div.innerHTML = `<p>${index + 1}. ${q.question}</p>`;
 
-    if (q.type === "mcq") {
+    const questionTitle = document.createElement("p");
+    questionTitle.innerText = `${index + 1}. ${q.question}`;
+    div.appendChild(questionTitle);
+
+    /* ===== MCQ ===== */
+    if (q.type === "mcq" && Array.isArray(q.options)) {
+
       q.options.forEach((opt, i) => {
-        div.innerHTML += `
-          <label>
-            <input type="radio" name="q${index}" value="${i}">
-            ${opt}
-          </label><br>
-        `;
-      });
-    }
 
-    if (q.type === "text") {
-      div.innerHTML += `
-        <input type="text"
-          name="q${index}"
-          placeholder="Enter your answer"
-          autocomplete="off"
-        ><br><br>
-      `;
-    }
+        const label = document.createElement("label");
+        label.className = "option-item";
+
+        const radio = document.createElement("input");
+        radio.type = "radio";
+        radio.name = `q${index}`;
+        radio.value = i;
+
+        label.appendChild(radio);
+        label.appendChild(document.createTextNode(opt));
+
+        div.appendChild(label);
+      });
+    }  
 
     container.appendChild(div);
   });
+
+  console.log("Questions Loaded Successfully.");
 }
 
 /* ========================== */
@@ -261,13 +283,18 @@ function startTimer() {
 
     timeLeft--;
 
+    localStorage.setItem("rl_exam_timeLeft", timeLeft);
+
     let m = Math.floor(timeLeft / 60);
     let s = timeLeft % 60;
 
     timerElement.innerText =
       `Time Left: ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 
-    if (timeLeft <= 0) submitExam();
+    if (timeLeft <= 0) {
+      localStorage.removeItem(EXAM_SESSION_KEY);
+      submitExam();
+    }
 
   }, 1000);
 }
@@ -351,32 +378,6 @@ function submitExam(btn) {
       }
     }
 
-    if (q.type === "text") {
-      const input = document.querySelector(`input[name="q${i}"]`);
-      if (input && input.value.trim() !== "") {
-
-        const cleanAnswer = input.value.toLowerCase().replace(/[^\w\s]/gi, '');
-        const wordCount = cleanAnswer.split(/\s+/).length;
-
-        if (wordCount >= q.minWords) {
-
-          let matchCount = 0;
-
-          q.keywords.forEach(keyword => {
-            if (cleanAnswer.includes(keyword.toLowerCase())) {
-              matchCount++;
-            }
-          });
-
-          if (matchCount >= 2) {
-            totalScore += q.marks || 4;
-          } else if (matchCount === 1) {
-            totalScore += Math.floor((q.marks || 4) / 2);
-          }
-        }
-      }
-    }
-
   });
 
   let finalStatus;
@@ -409,6 +410,9 @@ function submitExam(btn) {
     examPage.style.display = "none";
     document.body.classList.remove("exam-active");
     document.body.style.overflow = "auto";
+
+    localStorage.removeItem(EXAM_SESSION_KEY);
+localStorage.removeItem("rl_exam_timeLeft");
     startUserFlow();
 
   });
@@ -458,11 +462,34 @@ function logoutUser() {
 /* ========================== */
 
 firebase.auth().onAuthStateChanged(user => {
-  if (user) startUserFlow();
-  else {
+
+  if (!user) {
     detailsPage.style.display = "block";
     dashboardPage.style.display = "none";
     examPage.style.display = "none";
+    return;
+  }
+
+  const examActive = localStorage.getItem(EXAM_SESSION_KEY);
+
+  if (examActive === "true") {
+
+    timeLeft = parseInt(localStorage.getItem("rl_exam_timeLeft")) || 2700;
+
+    detailsPage.style.display = "none";
+    dashboardPage.style.display = "none";
+    examPage.style.display = "block";
+
+    document.body.classList.add("exam-active");
+    document.body.style.overflow = "hidden";
+
+    loadQuestions();
+    startTimer();
+
+  } else {
+
+    startUserFlow();
+
   }
 });
 

@@ -4,7 +4,8 @@
 <head>
   <title>RL Intelligence Round – Batch 01</title>
   <link rel="stylesheet" href="style.css">
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
   <!-- Firebase v8 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -13,120 +14,111 @@
 
 <body>
 
-  <div class="main-wrapper">
-    <div class="card">
+<div class="main-wrapper">
+<div class="card">
 
-      <!-- ================= AUTH PAGE ================= -->
-      <div id="details-page">
-        <div class="auth-header-image">
-            <img src="header.png" alt="RL Intelligence Header">
-      </div>
-        <h1>RL Entry Intelligence Round</h1>
-        <h3>Candidate Portal</h3>
+<!-- ================= AUTH PAGE ================= -->
+<div id="details-page">
 
-        <div class="tabs">
-          <button id="loginTab" class="active-tab" type="button" onclick="switchTab('login')">Login</button>
-          <button id="registerTab" type="button" onclick="switchTab('register')">Register</button>
-        </div>
+<div class="auth-header-image">
+  <img src="header.png" alt="RL Intelligence Header">
+</div>
 
-        <!-- LOGIN -->
-        <div id="loginForm">
-          <input type="email" id="loginEmail" placeholder="Email Address" required>
-          <input type="password" id="loginPassword" placeholder="Password" required>
-          <button type="button" onclick="loginUser()">Login</button>
-        </div>
+<h1>RL Entry Intelligence Round</h1>
+<h3>Candidate Portal</h3>
 
-        <!-- REGISTER -->
-        <div id="registerForm" style="display:none;">
-          <input type="text" id="name" placeholder="Full Name" required>
-          <input type="email" id="email" placeholder="Email Address" required>
-          <input type="password" id="password" placeholder="Create Password" required>
-          <input type="text" id="mobile" placeholder="Mobile Number" required>
-          <button type="button" onclick="registerUser()">Create Account</button>
-        </div>
+<div class="tabs">
+  <button id="loginTab" class="active-tab" onclick="switchTab('login')">Login</button>
+  <button id="registerTab" onclick="switchTab('register')">Register</button>
+</div>
 
-        <p id="form-error" class="form-error"></p>
+<div id="loginForm">
+  <input type="email" id="loginEmail" placeholder="Email Address">
+  <input type="password" id="loginPassword" placeholder="Password">
+  <button onclick="loginUser(event)">Login</button>
+</div>
 
-        <!-- ✅ Footer only for Login/Register -->
-        <div class="footer-auth">
-          © 2026 Rootlane Intelligence Systems
-        </div>
+<div id="registerForm" style="display:none;">
+  <input type="text" id="name" placeholder="Full Name">
+  <input type="email" id="email" placeholder="Email Address">
+  <input type="password" id="password" placeholder="Create Password">
+  <input type="text" id="mobile" placeholder="Mobile Number">
+  <button onclick="registerUser(event)">Create Account</button>
+</div>
 
-      </div>
+<p id="form-error" class="form-error"></p>
 
-      <!-- ================= DASHBOARD ================= -->
-      <div id="dashboard-page" style="display:none;">
+<div class="footer-auth">
+  © 2026 Rootlane Intelligence Systems
+</div>
 
-        <div class="auth-header-image">
-            <img src="header.png" alt="RL Intelligence Header">
-      </div>
+</div>
 
-        <h1>RL Entry Intelligence Round</h1>
+<!-- ================= DASHBOARD ================= -->
+<div id="dashboard-page" style="display:none;">
 
-        <div class="dashboard-topbar">
-          <p id="welcome-text"></p>
-          <a href="#" class="logout-link" onclick="logoutUser()">Logout</a>
-        </div>
+<div class="auth-header-image">
+  <img src="header.png" alt="RL Intelligence Header">
+</div>
 
-        <div id="exam-section" style="display:none;">
-          <p>Total Marks: 50</p>
-          <p>Duration: 45 Minutes</p>
-          <p>Minimum Qualification: 35 Marks</p>
+<h1>RL Entry Intelligence Round</h1>
 
-          <div class="instruction-box">
-            <h3>Important Instructions</h3>
-            <ul>
-              <li>Tab Switching is strictly prohibited.</li>
-              <li>Copy / Paste is not allowed.</li>
-              <li>Opening Developer Tools is not allowed.</li>
-              <li>Changing Browser or minimizing window is not allowed.</li>
-              <li>If any of the above violations occur, you will be <strong>Disqualified from this round.</strong></li>
-            </ul>
-          </div>
+<div class="dashboard-topbar">
+  <p id="welcome-text"></p>
+  <a href="#" class="logout-link" onclick="logoutUser()">Logout</a>
+</div>
 
-          <button type="button" onclick="startExam()">
-            Start Test
-          </button>
-        </div>
+<div id="exam-section" style="display:none;">
+  <p>Total Marks: 50</p>
+  <p>Duration: 45 Minutes</p>
+  <p>Minimum Qualification: 35 Marks</p>
 
-        <div id="attempted-section" style="display:none;">
-          <h3 style="margin-bottom:10px;">
-            You have attempted this test.
-          </h3>
-          <p id="final-score" style="font-weight:600;"></p>
-        </div>
-
-      </div>
-
-      <!-- ================= EXAM PAGE ================= -->
-      <div id="exam-page" style="display:none;">
-
-        <div class="exam-header">
-          <h2>RL Entry Intelligence Round</h2>
-          <div id="timer">Time Left: 45:00</div>
-        </div>
-
-        <form id="exam-form">
-
-          <div class="exam-body">
-            <div id="questions-container"></div>
-          </div>
-
-          <div class="exam-footer">
-            <button type="submit">Submit Test</button>
-          </div>
-
-        </form>
-      </div>
-
-    </div>
+  <div class="instruction-box">
+    <h3>Important Instructions</h3>
+    <ul>
+      <li>Tab Switching is strictly prohibited.</li>
+      <li>Copy / Paste is not allowed.</li>
+      <li>Opening Developer Tools is not allowed.</li>
+      <li>Changing Browser or minimizing window is not allowed.</li>
+    </ul>
   </div>
 
-  <!-- Other JS Files -->
-  <script src="questions.js"></script>
-  <script src="firebase-config.js"></script>
-  <script src="script.js"></script>
+  <button onclick="startExam(event)">Start Test</button>
+</div>
+
+<div id="attempted-section" style="display:none;">
+  <h3>You have attempted this test.</h3>
+  <p id="final-score"></p>
+</div>
+
+</div>
+
+<!-- ================= EXAM PAGE ================= -->
+<div id="exam-page" style="display:none;">
+
+<div class="exam-header">
+  <h2>RL Entry Intelligence Round</h2>
+  <div id="timer">Time Left: 45:00</div>
+</div>
+
+<form id="exam-form">
+  <div class="exam-body">
+    <div id="questions-container"></div>
+  </div>
+
+  <div class="exam-footer">
+    <button type="submit">Submit Test</button>
+  </div>
+</form>
+
+</div>
+
+</div>
+</div>
+
+<script src="questions.js"></script>
+<script src="firebase-config.js"></script>
+<script src="script.js"></script>
 
 </body>
-
 </html>
